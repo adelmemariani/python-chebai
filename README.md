@@ -10,7 +10,7 @@ The image below illustrates the architecture of our system designed for ontology
 
 ![Architecture for co-training](https://github.com/adelmemariani/python-chebai/blob/Box4Chemi/resources/co-training_architecture.png)
 
-The following animation visualizes the learned box embeddings during the training process. These embeddings capture containment relationships, which are utilized to infer the hierarchical structure among classes defined in the ChEBI ontology.
+The following animation visualizes the learned box embeddings during the training process. These embeddings capture containment relationships, which are utilized to infer the hierarchy of classes defined in the ChEBI ontology.
 ![Boxes during training](https://github.com/adelmemariani/python-chebai/blob/Box4Chemi/resources/visualization_of_boxes_during_training.gif)
 
 **Please note:** For visualization purposes, we demonstrate the model using a simplified 3-dimensional box embedding. However, the best-performing model, as detailed in our paper, operates with a 16-dimensional embedding space.
