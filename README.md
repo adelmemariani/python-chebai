@@ -8,6 +8,7 @@ This repository contains the code associated with the paper **"Modeling Chemical
 
 The image below illustrates the architecture of our system designed for ontology extension.
 
+
 ![Architecture for co-training](https://github.com/adelmemariani/python-chebai/blob/Box4Chemi/resources/co-training_architecture.png)
 
 The following animation visualizes the learned box embeddings during the training process. These embeddings capture containment relationships, which are utilized to infer the hierarchy of classes defined in the ChEBI ontology.
