@@ -492,54 +492,7 @@ class ChebiBox(Electra):
         self.in_dim = self.config.hidden_size
         self.hidden_dim = self.config.embeddings_to_points_hidden_size
         self.out_dim = self.config.embeddings_dimensions
-        #self.boxes = nn.Parameter(
-        #   3 - torch.rand((self.config.num_labels, self.dimensions, 2)) * 6
-        #) 
-        
         self.boxes = nn.Parameter( torch.rand((self.config.num_labels, self.out_dim, 2)) )
-       
-        #init_boxes = torch.rand((self.config.num_labels, self.out_dim, 2))
-        #self.boxes = nn.Parameter(torch.rand((self.config.num_labels, self.out_dim, 2)) * 3 )
-        """
-        with open('./train_data_sum.pkl', 'rb') as f:
-            train_data_sum = pickle.load(f)
-
-        scaled_train_data_sum = []
-        for v in train_data_sum:
-            scaled_train_data_sum.append(v**(1/(self.out_dim)))
-            #scaled_train_data_sum.append(math.sqrt(v))
-            #scaled_train_data_sum.append(v)
-                                                                                                            
-        reshaped_scaled_train_data_sum = torch.tensor(scaled_train_data_sum)[:, np.newaxis, np.newaxis]
-        modified_boxes = init_boxes * reshaped_scaled_train_data_sum
-
-
-        self.boxes  = nn.Parameter(modified_boxes)
-        """
-
-        """
-
-        self.embeddings_to_points = nn.Sequential(
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, 32),
-            nn.ReLU(),  
-            nn.Linear(32, 16)
-        )
-
-        """
-        """ 
-        self.embeddings_to_points = nn.Sequential(
-            nn.Linear(self.in_dim, self.hidden_dim),
-            nn.ReLU(),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.ReLU(),
-            nn.Linear(self.hidden_dim, self.out_dim),
-        )
-        """
-        
         self.embeddings_to_points = nn.Sequential(
             nn.Linear(self.in_dim, self.hidden_dim),
             nn.ReLU(),
@@ -548,31 +501,7 @@ class ChebiBox(Electra):
             nn.Dropout(0.1),
             nn.Linear(self.hidden_dim, self.out_dim)
         )
-        
-        """       
-        hid_imd = self.config.embeddings_to_points_hidden_size
-        self.embeddings_to_points = nn.Sequential(
-                torch.nn.Linear(self.in_dim, 512),
-                torch.nn.ReLU(),
-                nn.Dropout(0.1),
-                torch.nn.Linear( 512, hid_imd),
-                torch.nn.ReLU(),
-                nn.Dropout(0.1),
-                torch.nn.Linear(hid_imd, 512),
-                torch.nn.ReLU(),
-                nn.Dropout(0.1),
-                torch.nn.Linear(512 , self.out_dim),
-                )
-        """
-        #self.criterion = BoxLoss()
 
-    def gbmf2(self, x, left_boundary, right_boundary):
-        c = left_boundary + ((right_boundary - left_boundary) / 2)
-        a = 0.4 * (right_boundary - left_boundary)
-        b = torch.sqrt(torch.abs(right_boundary - left_boundary))
-        gbmf_values = 1 / (1 + torch.abs((x - c) / a) ** (2 * b))
-        membership_values = gbmf_values
-        return membership_values
 
     def forward(self, data, **kwargs):
         self.batch_size = data["features"].shape[0]
@@ -584,38 +513,19 @@ class ChebiBox(Electra):
         points = self.embeddings_to_points(d)
 
         b = self.boxes.expand(self.batch_size, -1, -1, -1)
-        #l = torch.min(b, dim=-1)[0]
-        #r = torch.max(b, dim=-1)[0]
         raw_l = torch.min(b, dim=-1)[0]
         raw_r = torch.max(b, dim=-1)[0]
-
-        #l = raw_l + (torch.abs(raw_l - raw_r) / self.out_dim)
-        #r = raw_r - (torch.abs(raw_l - raw_r) / self.out_dim)
        
         l = raw_l + ((raw_r - raw_l) * 0.2)
         r = raw_r - ((raw_r - raw_l) * 0.2)
 
         p = points.expand(self.config.num_labels, -1, -1).transpose(1, 0)
         max_distance_per_dim = torch.max(torch.stack((nn.functional.relu(l - p), nn.functional.relu(p - r))), dim=0)[0]
-        
 
-        # min might be replaced
-        #m = torch.min(membership_per_dim, dim=-1)[0]
-        #m = torch.mean(max_distance_per_dim, dim=-1)
-        
         m = torch.sum(max_distance_per_dim, dim=-1)
-        #m = torch.sum(max_distance_per_dim, dim=-1)
-        #sig = torch.sigmoid(m)
         s = 2 - ( 2 * (torch.sigmoid(m)) )
         l = torch.logit( (s * 0.99) + 0.001 )
-        
-        #memberships = self.gbmf2(p, l, r)
-        
-        #center = torch.mean(torch.stack([l, r]), dim=0)
-        #width = 0.6 * (r - l)
-        #slope = torch.sqrt(torch.abs(r - l))
-        #membership = 1 / (1 + ((torch.abs(p - center) / width) ** (2 * slope)))
-        #m = torch.mean(membership, dim=-1)
+
         return dict(
             boxes=b,
             embedded_points=points,
@@ -623,31 +533,6 @@ class ChebiBox(Electra):
             attentions=electra.attentions,
             target_mask=data.get("target_mask"),
         )
-
-class BoxLossBCEWithLogits(pl.LightningModule):
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-
-        def __call__(self, outputs, targets, **kwargs):  
-            weights_beta = kwargs['weights_beta']
-            weights_simple = kwargs['weights_simple']
-            model = kwargs['model']
-
-            cp = int(model.current_epoch)
-            if ((cp >= 0) and  (cp <= 200)):
-                weights_to_apply = weights_beta
-            if ((cp > 200) and  (cp <= 300)):
-                weights_to_apply = weights_simple
-            if ((cp > 300) and  (cp <= 400)):
-                weights_to_apply = weights_beta
-            if ((cp > 400) and  (cp <= 500)):
-                weights_to_apply = weights_simple
-            if ((cp > 500) and  (cp <= 700)):
-                weights_to_apply = weights_beta
-
-            criterion = nn.BCEWithLogitsLoss(weight=weights_to_apply)
-            bce_loss = criterion(outputs, targets)
-            return bce_loss
 
 class BoxLossBCE(pl.LightningModule):
         def __init__(self, **kwargs):
@@ -659,60 +544,18 @@ class BoxLossBCE(pl.LightningModule):
             model = kwargs['model']
 
             weights_to_apply = weights_beta
-            #if int(model.current_epoch) > 10:
-            #    weights_to_apply = weights2
 
             criterion = nn.BCELoss(weight=weights_to_apply)
 
             bce_loss = criterion(outputs, targets)
             
             return bce_loss
-        #def __call__(self, outputs, targets, model, **kwargs):
-        #    weights = kwargs['weights']
-        # 
-        #    bce_loss = self.criteria(outputs, targets)
-        #    total_loss = bce_loss 
-        #    return total_loss
 
 class BoxLoss(pl.LightningModule):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def __call__(self, outputs, targets, model, **kwargs):
-        """
-        boxes = model.boxes
-        dim = model.dimensions
-
-        corner_1 = boxes[:, :, 0]
-        corner_2 = boxes[:, :, 1]
-
-        box_sizes_per_dim = torch.abs(corner_1 - corner_2)
-        box_sizes = box_sizes_per_dim.prod(1)
-
-        min_box_size_value = 2
-        max_box_size_value = 100
-
-        mask_min_box_size = (box_sizes < min_box_size_value)
-        small_boxes = box_sizes[mask_min_box_size]
-        diff_for_small_boxes = min_box_size_value - small_boxes
-
-        min_box_size_penalty = 0
-        if diff_for_small_boxes.nelement() != 0:
-            min_box_size_penalty = torch.mean(diff_for_small_boxes) ** (1 / dim)
-
-        mask_max_box_size = (box_sizes > max_box_size_value)
-        large_boxes = box_sizes[mask_max_box_size]
-        diff_for_large_boxes = large_boxes - max_box_size_value
-        max_box_size_penalty = 0
-        if diff_for_large_boxes.nelement() != 0:
-            max_box_size_penalty = torch.mean(diff_for_large_boxes) ** (1 / dim)
-
-        criterion = nn.BCEWithLogitsLoss()
-        bce_loss = criterion(outputs, targets)
-
-        #total_loss = bce_loss + (0.1 * min_box_size_penalty) + (0.1 * max_box_size_penalty)
-        total_loss = bce_loss + (0.1 * max_box_size_penalty)
-        """
 
         boxes = model.boxes
         dim = model.out_dim
@@ -722,7 +565,6 @@ class BoxLoss(pl.LightningModule):
 
         box_sizes_per_dim = torch.abs(corner_1 - corner_2)
         box_sizes = box_sizes_per_dim.prod(1)
-
 
         min_mask = (box_sizes < (0.4) ** dim)
         min_box_size_penalty = torch.sum(box_sizes[min_mask]) * 0.01
@@ -743,17 +585,7 @@ class BoxLoss(pl.LightningModule):
             prog_bar=True,
             logger=True,
             )
-        """
-        model.log(
-            "max_box_size_penalty",
-            max_box_size_penalty,
-            batch_size=10,
-            on_step=False,
-            on_epoch=True,
-            prog_bar=True,
-            logger=True,
-            )
-        """
+
         return total_loss
 
 def softabs(x, eps=0.01):
