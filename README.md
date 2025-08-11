@@ -16,4 +16,22 @@ The following animation visualizes the learned box embeddings during the trainin
 
 **Please note:** For visualization purposes, we demonstrate the model using a simplified 3-dimensional box embedding. However, the best-performing model, as detailed in our paper, operates with a 16-dimensional embedding space.
 
+(1)
+```
+git clone https://github.com/adelmemariani/python-chebai.git
+```
 
+(2)
+```
+cd python-chebai/
+```
+
+(3)
+```
+git checkout Box4Chemi
+```
+
+(4)
+```
+CUDA_VISIBLE_DEVICES="" python -m chebai fit --trainer=configs/training/default_trainer.yml --model=configs/model/box.yml  --model.load_prefix=generator. --data=configs/data/chebi100.yml --model.criterion=configs/loss/box_bce.yml
+```
