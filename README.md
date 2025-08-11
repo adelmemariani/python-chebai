@@ -16,6 +16,8 @@ The following animation visualizes the learned box embeddings during the trainin
 
 **Please note:** For visualization purposes, we demonstrate the model using a simplified 3-dimensional box embedding. However, the best-performing model, as detailed in our paper, operates with a 16-dimensional embedding space.
 
+## Installation
+
 (1)
 ```
 git clone https://github.com/adelmemariani/python-chebai.git
@@ -24,6 +26,7 @@ git clone https://github.com/adelmemariani/python-chebai.git
 (2)
 ```
 cd python-chebai/
+pip install -e .
 ```
 
 (3)
