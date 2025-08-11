@@ -23,18 +23,22 @@ The following animation visualizes the learned box embeddings during the trainin
 git clone https://github.com/adelmemariani/python-chebai.git
 ```
 
-(2) Install the package:
+(2) Change the working directory to `python-chebai`:
 ```
 cd python-chebai/
+```
+
+(3) Switch to the `Box4Chemi` branch:
+```
+git checkout Box4Chemi
+```
+
+(4) Install the package:
+```
 pip install -e .
 ```
 
 ## Usage
-
-(4) Switch to the `Box4Chemi` branch:
-```
-git checkout Box4Chemi
-```
 
 (5) Download and extract the following folder. It includes the training data and a pretrained ELECTRA model necessary to run the experiments:
 ```
