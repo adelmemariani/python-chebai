@@ -36,7 +36,16 @@ pip install -e .
 git checkout Box4Chemi
 ```
 
-(5) Training is implemented with PyTorch Lightning. The command below runs the experiment:
+(5) Download and extract the following folder. It includes the training data and a pretrained ELECTRA model necessary to run the experiments:
+```
+https://zenodo.org/records/16794618
+```
+
+(6) Copy the `data` folder to the root of the python-chebai directory, beside the `chebai` folder.
+
+(7) Copy the `pretrained_electra.ckpt` file to the root of the python-chebai directory, beside the `chebai` and `data` folders.
+
+(8) Training is implemented with PyTorch Lightning. The command below runs the experiment:
 ```
 python -m chebai fit --trainer=configs/training/default_trainer.yml --model=configs/model/box.yml  --model.load_prefix=generator. --data=configs/data/chebi100.yml --model.criterion=configs/loss/box_bce.yml --model.pretrained_checkpoint=pretrained_electra.ckpt
 ```
