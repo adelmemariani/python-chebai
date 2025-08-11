@@ -19,8 +19,12 @@ import torch
 import tqdm
 
 from chebai.preprocessing import reader as dr
-from chebai.preprocessing.datasets.base import XYBaseDataModule, DataLoader
-from chebai.preprocessing.datasets.chebi import ChEBIOver100
+from chebai.preprocessing.datasets.base import DataLoader, XYBaseDataModule
+from chebai.preprocessing.datasets.chebi import (
+    ChEBIOver50,
+    ChEBIOver100,
+    ChEBIOverX,
+)
 
 
 class PubChem(XYBaseDataModule):
@@ -31,6 +35,8 @@ class PubChem(XYBaseDataModule):
 
     def __init__(self, *args, k=100000, **kwargs):
         self._k = k
+        self.pubchem_url = "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/Monthly/2023-11-01/Extras/CID-SMILES.gz"
+
         super(PubChem, self).__init__(*args, **kwargs)
 
     @property
@@ -50,7 +56,7 @@ class PubChem(XYBaseDataModule):
 
     @property
     def raw_dir(self):
-        return os.path.join("data", self._name, "raw", self.split_label)
+        return os.path.join(self.base_dir, "raw", self.split_label)
 
     @staticmethod
     def _load_dict(input_file_path):
@@ -60,11 +66,10 @@ class PubChem(XYBaseDataModule):
                 yield dict(features=smiles, labels=None, ident=ident)
 
     def download(self):
-        url = f"https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/Monthly/2021-10-01/Extras/CID-SMILES.gz"
         if self._k == PubChem.FULL:
             if not os.path.isfile(os.path.join(self.raw_dir, "smiles.txt")):
-                print("Download from", url)
-                r = requests.get(url, allow_redirects=True)
+                print("Download from", self.pubchem_url)
+                r = requests.get(self.pubchem_url, allow_redirects=True)
                 with tempfile.NamedTemporaryFile() as tf:
                     tf.write(r.content)
                     print("Unpacking...")
@@ -215,22 +220,19 @@ class SWJPreChem(PubChem):
     def identifier(self):
         return (self.reader.name(),)
 
-    @property
-    def raw_dir(self):
-        return os.path.join("data", self._name, "raw")
 
-
-class PubToxAndChEBI100(XYBaseDataModule):
+class PubToxAndChebiX(XYBaseDataModule):
     READER = dr.ChemDataReader
+    CHEBI_X = ChEBIOverX
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.labeled = ChEBIOver100(*args, **kwargs)
+        self.labeled = self.CHEBI_X(*args, **kwargs)
         self.unlabeled = PubchemChem(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def _name(self):
-        return "PubToxUChebi100"
+        return "PubToxU" + self.labeled._name
 
     def dataloader(self, kind, **kwargs):
         labeled_data = torch.load(
@@ -260,3 +262,19 @@ class PubToxAndChEBI100(XYBaseDataModule):
     def setup_processed(self):
         self.labeled.setup()
         self.unlabeled.setup()
+
+
+class PubToxAndChebi100(PubToxAndChebiX):
+    CHEBI_X = ChEBIOver100
+
+
+class PubToxAndChebi50(PubToxAndChebiX):
+    CHEBI_X = ChEBIOver50
+
+
+class PubChemDeepSMILES(PubChem):
+    READER = dr.DeepChemDataReader
+
+
+class PubChemSELFIES(PubChem):
+    READER = dr.SelfiesReader

@@ -84,12 +84,13 @@ class ChebaiBaseNet(LightningModule):
                 if self.pass_loss_kwargs:
                     loss_kwargs = loss_kwargs_candidates
 
-                with open('./weights_2.pkl', 'rb') as f:
-                    weights_beta = pickle.load(f)
-                with open('./weights.pkl', 'rb') as f:
-                    weights_simple = pickle.load(f)   
-                loss_kwargs["weights_beta"] = torch.tensor(weights_beta).to('cuda')
-                loss_kwargs["weights_simple"] = torch.tensor(weights_simple).to('cuda')
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                with open('weights_cui.pkl', 'rb') as f:
+                    weights_cui = pickle.load(f)
+                with open('weights_norm.pkl', 'rb') as f:
+                    weights_norm = pickle.load(f)
+                loss_kwargs["weights_cui"] = torch.tensor(weights_cui).to(device)
+                loss_kwargs["weights_norm"] = torch.tensor(weights_norm).to(device)
                 loss_kwargs["model"] = self 
                 loss = self.criterion(loss_data, loss_labels, **loss_kwargs)
                 d["loss"] = loss

@@ -539,13 +539,13 @@ class BoxLossBCE(pl.LightningModule):
             super().__init__(**kwargs)
 
         def __call__(self, outputs, targets, **kwargs):
-            weights_beta = kwargs['weights_beta']
-            weights_simple = kwargs['weights_simple']
+            weights_cui = kwargs['weights_cui']
+            weights_norm = kwargs['weights_norm']
             model = kwargs['model']
 
-            weights_to_apply = weights_beta
+            weights_to_apply = weights_norm
 
-            criterion = nn.BCELoss(weight=weights_to_apply)
+            criterion = nn.BCEWithLogitsLoss(weight=weights_to_apply)
 
             bce_loss = criterion(outputs, targets)
             

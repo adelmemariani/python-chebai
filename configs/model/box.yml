@@ -1,0 +1,43 @@
+class_path: chebai.models.ChebiBox
+init_args:
+  out_dim: 854
+  optimizer_kwargs: { lr: 1e-4 }
+  metrics:
+    train:
+      class_path: torchmetrics.MetricCollection
+      init_args:
+        metrics:
+          micro-f1:
+            class_path: torchmetrics.classification.F1Score
+            init_args: { task: multilabel, num_labels: 854, average: micro }
+          macro-f1:
+            class_path: torchmetrics.classification.F1Score
+            init_args: { task: multilabel, num_labels: 854, average: macro }
+    validation:
+      class_path: torchmetrics.MetricCollection
+      init_args:
+        metrics:
+          micro-f1:
+            class_path: torchmetrics.classification.F1Score
+            init_args: { task: multilabel, num_labels: 854, average: micro }
+          macro-f1:
+            class_path: torchmetrics.classification.F1Score
+            init_args: { task: multilabel, num_labels: 854, average: macro }
+    test:
+      class_path: torchmetrics.MetricCollection
+      init_args:
+        metrics:
+          micro-f1:
+            class_path: torchmetrics.classification.F1Score
+            init_args: { task: multilabel, num_labels: 854, average: micro }
+          macro-f1:
+            class_path: torchmetrics.classification.F1Score
+            init_args: { task: multilabel, num_labels: 854, average: macro }
+  config:
+    vocab_size: 1400
+    max_position_embeddings: 1800
+    num_attention_heads: 8
+    num_hidden_layers: 6
+    type_vocab_size: 1
+    embeddings_to_points_hidden_size: 1200
+    embeddings_dimensions: 16
