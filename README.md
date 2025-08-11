@@ -38,5 +38,5 @@ git checkout Box4Chemi
 
 (5) Training is implemented with PyTorch Lightning. The command below runs the experiment:
 ```
-CUDA_VISIBLE_DEVICES="" python -m chebai fit --trainer=configs/training/default_trainer.yml --model=configs/model/box.yml  --model.load_prefix=generator. --data=configs/data/chebi100.yml --model.criterion=configs/loss/box_bce.yml
+python -m chebai fit --trainer=configs/training/default_trainer.yml --model=configs/model/box.yml  --model.load_prefix=generator. --data=configs/data/chebi100.yml --model.criterion=configs/loss/box_bce.yml
 ```
