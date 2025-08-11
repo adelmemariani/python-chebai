@@ -29,12 +29,14 @@ cd python-chebai/
 pip install -e .
 ```
 
-(3)
+## Usage
+
+(4)
 ```
 git checkout Box4Chemi
 ```
 
-(4)
+(5)
 ```
 CUDA_VISIBLE_DEVICES="" python -m chebai fit --trainer=configs/training/default_trainer.yml --model=configs/model/box.yml  --model.load_prefix=generator. --data=configs/data/chebi100.yml --model.criterion=configs/loss/box_bce.yml
 ```
