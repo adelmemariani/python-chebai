@@ -18,12 +18,12 @@ The following animation visualizes the learned box embeddings during the trainin
 
 ## Installation
 
-(1)
+(1) Clone the repository from GitHub:
 ```
 git clone https://github.com/adelmemariani/python-chebai.git
 ```
 
-(2)
+(2) Install the package:
 ```
 cd python-chebai/
 pip install -e .
@@ -31,12 +31,12 @@ pip install -e .
 
 ## Usage
 
-(4)
+(4) Switch to the `Box4Chemi` branch:
 ```
 git checkout Box4Chemi
 ```
 
-(5)
+(5) Training is implemented with PyTorch Lightning. The command below runs the experiment:
 ```
 CUDA_VISIBLE_DEVICES="" python -m chebai fit --trainer=configs/training/default_trainer.yml --model=configs/model/box.yml  --model.load_prefix=generator. --data=configs/data/chebi100.yml --model.criterion=configs/loss/box_bce.yml
 ```
